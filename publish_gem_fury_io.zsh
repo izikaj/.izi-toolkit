@@ -2,7 +2,8 @@
 # Written by IzikAJ <izikaj@gmail.com>.
 
 # use global value or load from secret file
-FURY_IO_UPSTREAM=${FURY_IO_UPSTREAM:="$(cat fury.io.secret)"}
+FURY_IO_SECRET=${FURY_IO_SECRET:="$HOME/.izi-toolkit/fury.io.secret"}
+FURY_IO_UPSTREAM=${FURY_IO_UPSTREAM:="$(cat "$FURY_IO_SECRET")"}
 
 # publish private gem
 # raw example:
