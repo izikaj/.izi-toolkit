@@ -1,0 +1,71 @@
+#/usr/bin/env bash
+# Written by IzikAJ <izikaj@gmail.com>.
+
+# deprecated, use it as is to restore data from old backup archive
+
+SCRIPT_ROOT="$(dirname $0)"
+TMP_DIR="$SCRIPT_ROOT/.tmp"
+TARGET_DIR="$PWD"
+TARGET_DIR="$PWD"
+BACKUP_ARC="$1"
+TARGET_NAME=$(basename $PWD | sed -e 's:[^a-z]:_:g')
+
+if [ -f "$BACKUP_ARC" ]; then
+  echo "APPLY BACKUP [$TARGET_NAME] from file: $BACKUP_ARC"
+  rm -rf $TMP_DIR
+  mkdir -p $TMP_DIR
+
+  echo_rel_path() {
+    PREFIX=$1
+    ABS_PATH=$2
+    PRETTY_PATH="$(ruby -e "require 'pathname'; puts Pathname.new('$ABS_PATH').relative_path_from(Pathname.new('$TMP_DIR')).to_s")"
+    echo "$PREFIX$PRETTY_PATH"
+  }
+
+  echo "unpack backup archive..."
+  cp -f $BACKUP_ARC "$TMP_DIR/$TARGET_NAME.tar"
+  tar -xf "$TMP_DIR/$TARGET_NAME.tar" -C $TMP_DIR 2>/dev/null
+
+  echo "search for compressed database dump..."
+  COMPRESSED_DB=$(find $TMP_DIR -name "PostgreSQL.sql.gz")
+  if [ -f "$COMPRESSED_DB" ]; then
+    echo_rel_path "compressed database dump found: " $COMPRESSED_DB
+    # echo "compressed database dump found: $("$COMPRESSED_DB" | sed -e ':$TMP_DIR::')"
+    cp $COMPRESSED_DB "$TMP_DIR/$TARGET_NAME.sql.gz"
+    gunzip "$TMP_DIR/$TARGET_NAME.sql.gz"
+    DB_DUMP=$(find $TMP_DIR -name "$TARGET_NAME.sql")
+    if [ -f "$DB_DUMP" ]; then
+      dropdb $TARGET_NAME
+      createdb $TARGET_NAME
+      echo "database [$TARGET_NAME] cleared"
+
+      psql $TARGET_NAME < $DB_DUMP 1>/dev/null 2>/dev/null
+      echo "database [$TARGET_NAME] loaded from dump"
+    fi
+  else
+    echo "compressed database NOT found!"
+  fi
+
+  echo "search for compressed artifacts archive..."
+  COMPRESSED_ARC=$(find $TMP_DIR -name "*.tar.gz" | grep "archives")
+  if [ -f "$COMPRESSED_ARC" ]; then
+    echo_rel_path "compressed artifacts found: " $COMPRESSED_ARC
+    # echo "compressed artifacts found: $COMPRESSED_ARC"
+    tar -xf $COMPRESSED_ARC -C $TMP_DIR 2>/dev/null
+    echo "artifacts uncompressed"
+
+    UPLOADS_DIR=$(find $TMP_DIR -name "uploads" | grep 'public/uploads')
+    if [ -d "$UPLOADS_DIR" ]; then
+      echo "copy uploads directory..."
+      cp -R $UPLOADS_DIR "$TARGET_DIR/public/"
+    fi
+    echo "all required artifacts copied to target"
+  else
+    echo "artifacts NOT found!"
+  fi
+
+  echo "cleaning..."
+  rm -rf $TMP_DIR
+else
+  echo "Sorry, path not found"
+fi

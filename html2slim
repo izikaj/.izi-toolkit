@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+
+require 'bundler'
+require 'byebug'
+require 'html2haml'
+require 'haml2slim'
+
+def html2haml(text, options = {})
+  Html2haml::HTML.new(text, options).render.rstrip
+end
+
+def haml2slim(text)
+  Haml2Slim.convert!(text).to_s
+end
+
+def html2slim(text)
+  haml2slim(html2haml(text))
+end
+
+data = %x(pbpaste)
+exec "echo '#{html2slim(data)}' | pbcopy"
