@@ -1,4 +1,3 @@
-echo "??????????????"
 IZI_TOOLKIT_ROOT=${IZI_TOOLKIT_ROOT:="$HOME/.izi-toolkit"}
 
 [ -f "$IZI_TOOLKIT_ROOT/jump.zsh" ] && source "$IZI_TOOLKIT_ROOT/jump.zsh"
