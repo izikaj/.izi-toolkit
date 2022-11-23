@@ -1,0 +1,50 @@
+#!/usr/bin/env zx
+
+// Read more here: https://github.com/google/zx
+// const later = (t = 100) => new Promise(d => setTimeout(d, t))
+const IS_PIPE = !process.stdin.isTTY;
+const VERBOSE = (argv.v || argv.V || argv.verbose || $.env.VERBOSE || false) && !IS_PIPE;
+// $.verbose = VERBOSE;
+$.verbose = false;
+const INPUT = IS_PIPE ? (await stdin()) : (await $`pbpaste`).stdout.toString();
+
+function pbcopy(data) {
+  const proc = $.spawn('pbcopy');
+  proc.stdin.write(data);
+  proc.stdin.end();
+}
+
+async function convert(htmlstring) {
+  const proc = $`html2haml | haml2slim`;
+
+  proc.stdin.write(htmlstring);
+  proc.stdin.end();
+  const result = await proc;
+  const raw = result.stdout.toString();
+  const err = result.stderr.toString();
+  if (err) {
+    console.log(chalk.red.bold('Processing Error:'));
+    console.log(chalk.red(err));
+  }
+  return raw;
+}
+
+
+if (argv.h || argv.H || argv.help) {
+  console.log(chalk.yellow.bold('html 2 slim pipe finction'));
+  console.log(
+    chalk.yellow('sample:'),
+    chalk.blue('pbpaste | html2slim | pbcopy')
+  );
+  console.log(
+    chalk.yellow('or with a file:'),
+    chalk.blue('cat "test.html" | html2slim > "test.html.slim"')
+  );
+  console.log(
+    chalk.yellow('or with clipboard:'),
+    chalk.blue('cat "html2slim - this will use clipboard & modify it')
+  );
+} else {
+  const result = await convert(INPUT);
+  IS_PIPE ? echo(result) : pbcopy(result);
+}

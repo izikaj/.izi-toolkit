@@ -1,0 +1,38 @@
+#!/usr/bin/env /Users/izik/.nvm/versions/node/v16.18.1/bin/zx
+
+const later = (t = 100) => new Promise(d => setTimeout(d, t))
+const VERBOSE = argv.v || argv.V || argv.verbose || $.env.VERBOSE || false;
+const IS_PIPE = !process.stdin.isTTY;
+const INPUT = IS_PIPE ? (await stdin()) : undefined;
+
+if (VERBOSE) {
+  console.log(chalk.blue('VERBOSE: ON'));
+  if (INPUT) {
+    console.log(chalk.blue('INPUT:'));
+    console.log(chalk.blue(INPUT));
+  }
+}
+
+// console.log(chalk.blue('Hello world!'))
+// let { version } = await fs.readJson('./package.json')
+// await $`cd ${os.homedir()} && mkdir example`
+// await $`mkdir ${path.join(basedir, 'output')}`
+// let packages = await glob(['package.json', 'packages/*/package.json'])
+// console.log(YAML.parse('foo: bar').foo)
+// if( argv.someFlag ){ echo('yes') }
+// let node = await which('node')
+// let bear = await question('What kind of bear is best? ')
+// console.log('???', bear);
+
+
+echo('--------------------------------');
+console.log('>>>> VERBOSE', VERBOSE);
+console.log('>>>> DATA:');
+console.log(inputData);
+echo('--------------------------------');
+
+
+// console.log('????????????', branch);
+// echo('--------------------------------');
+echo('--------------------------------');
+// process.exit(0);

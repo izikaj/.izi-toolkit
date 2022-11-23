@@ -1,0 +1,53 @@
+#!/usr/bin/env zx
+
+// const later = (t = 100) => new Promise(d => setTimeout(d, t))
+const IS_PIPE = !process.stdin.isTTY;
+const VERBOSE = (argv.v || argv.V || argv.verbose || $.env.VERBOSE || false) && !IS_PIPE;
+// $.verbose = VERBOSE;
+$.verbose = false;
+
+function pbcopy(data) {
+  const proc = $.spawn('pbcopy');
+  proc.stdin.write(data);
+  proc.stdin.end();
+}
+
+if (argv.h || argv.H || argv.help) {
+  console.log(chalk.yellow.bold('simple JSON formatting pipe finction'));
+  console.log(
+    chalk.yellow('sample:'),
+    chalk.blue('pbpaste | prettyJSON | pbcopy')
+  );
+  console.log(
+    chalk.yellow('or with a file:'),
+    chalk.blue('cat "test.json" | prettyJSON > "test.json"')
+  );
+  console.log(
+    chalk.yellow('or with clipboard:'),
+    chalk.blue('cat "prettyJSON - this will use clipboard & modify it')
+  );
+} else {
+  const INPUT = IS_PIPE ? (await stdin()) : (await $`pbpaste`).stdout;
+
+  if (VERBOSE) {
+    console.log(chalk.blue('VERBOSE: ON'));
+    if (INPUT) {
+      console.log(chalk.blue('INPUT:'));
+      console.log(chalk.blue(INPUT));
+    }
+  }
+
+  try {
+    const parsed = JSON.parse(INPUT);
+    const formatted = JSON.stringify(parsed, undefined, '  ');
+
+    if (VERBOSE) {
+      console.log(chalk.yellow('FORMATTED:'));
+      console.log(chalk.yellow(formatted));
+    }
+
+    IS_PIPE ? echo(formatted) : pbcopy(formatted);
+  } catch (error) {
+    if (VERBOSE) console.error(error.toString());
+  }
+}
